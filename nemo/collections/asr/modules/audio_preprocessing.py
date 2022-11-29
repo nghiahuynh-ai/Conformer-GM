@@ -567,7 +567,7 @@ class SpectrogramAugmentation(NeuralModule):
         rect_masks=0,
         rect_time=5,
         rect_freq=20,
-        specshot_ratio=0,
+        mask_ratio=0,
         rng=None,
         augmask_value=0.0,
         use_numba_spec_augment: bool = True,
@@ -596,9 +596,9 @@ class SpectrogramAugmentation(NeuralModule):
             )
             self.augment_type.append('spec_augment')
             
-        if specshot_ratio > 0.0:
+        if mask_ratio > 0.0:
             self.spec_shot = SpecShot(
-                mask_ratio = specshot_ratio,
+                mask_ratio = mask_ratio,
                 mask_value = augmask_value
             )
             self.augment_type.append('spec_shot')
@@ -823,7 +823,7 @@ class SpectrogramAugmentationConfig:
     rect_masks: int = 0
     rect_time: int = 0
     rect_freq: int = 0
-    specshot_ratio: float = 0.0
+    mask_ratio: float = 0.0
     augmask_value: float = 0.0  
     rng: Optional[Any] = None  # random.Random() type
     use_numba_spec_augment: bool = True
