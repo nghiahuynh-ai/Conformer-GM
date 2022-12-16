@@ -15,6 +15,7 @@
 import math
 from collections import OrderedDict
 
+import numpy as np
 import torch
 import torch.distributed
 import torch.nn as nn
@@ -302,3 +303,45 @@ class ConformerEncoder(NeuralModule, Exportable):
         mask = self.use_pad_mask
         self.use_pad_mask = on
         return mask
+
+class GradientMask(nn.Module):
+    def __init__(self, num_masks=10, mask_width=0.02, mask_value=0.0):
+        super().__init__()
+        self.num_masks = num_masks
+        self.mask_width = mask_width
+        self.mask_value = mask_value
+        
+    @torch.no_grad()
+    def forward(self, input_spec):
+        batch, freq, time = input_spec.shape
+        max_offset = max(1, int(time * self.mask_width))
+        mask = torch.ones(batch, time)
+        for batch_idx in range(batch):
+            offset = np.random.randint(1, max_offset)
+            masked_idx = np.random.choice(range(time - offset), size=self.num_masks, replace=False)
+            for idx in masked_idx:
+                mask[batch_idx, idx : idx + offset] = self.mask_value
+        mask = mask != self.mask_value
+        input_mask = mask.unsqueeze(1).expand(batch, freq, time)
+        input_spec = input_spec * input_mask.to(input_spec.device)
+        del input_mask
+        return input_spec, mask
+    
+    
+class SkipGradient(nn.Module):
+    
+    def __init__(self):
+        super().__init__()
+        self.mask = None
+    
+    def update_mask(self, mask):
+        self.mask = mask
+    
+    def forward(self, input_spec):
+        return input_spec
+    
+    def backward(self, grad_output):
+        mask_output = self.mask.unsqueeze(1).expand(grad_output.shape)
+        grad_output = grad_output * mask_output.to(grad_output.device)
+        del mask_output
+        return grad_output
