@@ -130,6 +130,10 @@ class ConformerEncoder(NeuralModule, Exportable):
         dropout=0.1,
         dropout_emb=0.1,
         dropout_att=0.0,
+        num_masks=10,
+        mask_width=0.02,
+        mask_value=0.0,
+        gm_apply=False,
     ):
         super().__init__()
 
@@ -215,6 +219,13 @@ class ConformerEncoder(NeuralModule, Exportable):
             self._feat_out = d_model
         self.set_max_audio_length(self.pos_emb_max_len)
         self.use_pad_mask = True
+        
+        if gm_apply and num_masks > 0 and mask_width > 0.0:
+            self.grad_mask = GradientMask(num_masks, mask_width, mask_value)
+            self.skip_grad = SkipGradient()
+        else:
+            self.grad_mask = None
+            self.skip_grad = None
 
     def set_max_audio_length(self, max_audio_length):
         """ Sets maximum input length.

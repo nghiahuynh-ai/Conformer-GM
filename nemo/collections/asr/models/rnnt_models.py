@@ -96,14 +96,8 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
             
         if hasattr(self.cfg, 'gradient_mask') and self._cfg.gradient_mask.apply:
             self.masked_batch = self._cfg.gradient_mask.masked_batch
-            self.num_masks=self._cfg.gradient_mask.num_masks
-            self.mask_width=self._cfg.gradient_mask.mask_width
-            self.mask_value=self._cfg.gradient_mask.value
         else:
             self.masked_batch = []
-            self.num_masks=0
-            self.mask_width=0
-            self.mask_value=0
             
         # Setup decoding objects
         self.decoding = RNNTDecoding(
