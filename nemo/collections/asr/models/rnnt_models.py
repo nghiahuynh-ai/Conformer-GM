@@ -624,7 +624,7 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
 
     @typecheck()
     def forward(
-        self, input_signal=None, input_signal_length=None, processed_signal=None, processed_signal_length=None
+        self, input_signal=None, input_signal_length=None, processed_signal=None, processed_signal_length=None, batch_nb=None,
     ):
         """
         Forward pass of the model. Note that for RNNT Models, the forward pass of the model is a 3 step process,
@@ -672,7 +672,7 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
             processed_signal = self.spec_augmentation(input_spec=processed_signal, length=processed_signal_length)
         
         encoded, encoded_len = self.encoder(
-            batch_nb=self.batch_nb, 
+            batch_nb=batch_nb, 
             audio_signal=processed_signal, 
             length=processed_signal_length
         )
