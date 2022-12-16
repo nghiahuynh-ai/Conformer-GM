@@ -286,7 +286,7 @@ class ConformerEncoder(NeuralModule, Exportable):
             pad_mask = None
             
         print(audio_signal.shape)
-        raise
+        # raise
             
         if self.grad_mask is not None and batch_nb in self.masked_batch:
             audio_signal = self.grad_mask(audio_signal)
