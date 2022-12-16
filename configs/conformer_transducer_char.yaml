@@ -153,7 +153,7 @@ model:
     num_masks: ${model.gradient_mask.num_masks}
     mask_width: ${model.gradient_mask.mask_width}
     mask_value: ${model.gradient_mask.mask_value}
-    masked_batch: ${model.gradient_mask.mask_batch}
+    masked_batch: ${model.gradient_mask.masked_batch}
 
   decoder:
     _target_: nemo.collections.asr.modules.RNNTDecoder
