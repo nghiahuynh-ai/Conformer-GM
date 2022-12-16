@@ -87,27 +87,27 @@ class ConformerEncoder(NeuralModule, Exportable):
         input_example_length = torch.randint(1, max_dim, (max_batch,)).to(dev)
         return tuple([input_example, input_example_length])
 
-    @property
-    def input_types(self):
-        """Returns definitions of module input ports.
-        """
-        return OrderedDict(
-            {
-                "audio_signal": NeuralType(('B', 'D', 'T'), SpectrogramType()),
-                "length": NeuralType(tuple('B'), LengthsType()),
-            }
-        )
+    # @property
+    # def input_types(self):
+    #     """Returns definitions of module input ports.
+    #     """
+    #     return OrderedDict(
+    #         {
+    #             "audio_signal": NeuralType(('B', 'D', 'T'), SpectrogramType()),
+    #             "length": NeuralType(tuple('B'), LengthsType()),
+    #         }
+    #     )
 
-    @property
-    def output_types(self):
-        """Returns definitions of module output ports.
-        """
-        return OrderedDict(
-            {
-                "outputs": NeuralType(('B', 'D', 'T'), AcousticEncodedRepresentation()),
-                "encoded_lengths": NeuralType(tuple('B'), LengthsType()),
-            }
-        )
+    # @property
+    # def output_types(self):
+    #     """Returns definitions of module output ports.
+    #     """
+    #     return OrderedDict(
+    #         {
+    #             "outputs": NeuralType(('B', 'D', 'T'), AcousticEncodedRepresentation()),
+    #             "encoded_lengths": NeuralType(tuple('B'), LengthsType()),
+    #         }
+    #     )
 
     def __init__(
         self,
@@ -130,10 +130,11 @@ class ConformerEncoder(NeuralModule, Exportable):
         dropout=0.1,
         dropout_emb=0.1,
         dropout_att=0.0,
+        gm_apply=False,
         num_masks=10,
         mask_width=0.02,
         mask_value=0.0,
-        gm_apply=False,
+        masked_batch=[],
     ):
         super().__init__()
 
@@ -221,9 +222,11 @@ class ConformerEncoder(NeuralModule, Exportable):
         self.use_pad_mask = True
         
         if gm_apply and num_masks > 0 and mask_width > 0.0:
+            self.masked_batch = masked_batch
             self.grad_mask = GradientMask(num_masks, mask_width, mask_value)
             self.skip_grad = SkipGradient()
         else:
+            self.masked_batch = []
             self.grad_mask = None
             self.skip_grad = None
 
@@ -241,12 +244,12 @@ class ConformerEncoder(NeuralModule, Exportable):
         self.pos_enc.extend_pe(max_audio_length, device)
 
     @typecheck()
-    def forward(self, audio_signal, length=None):
+    def forward(self, batch_nb, audio_signal, length=None):
         self.update_max_seq_length(seq_length=audio_signal.size(2), device=audio_signal.device)
-        return self.forward_for_export(audio_signal=audio_signal, length=length)
+        return self.forward_for_export(batch_nb=batch_nb, audio_signal=audio_signal, length=length)
 
     @typecheck()
-    def forward_for_export(self, audio_signal, length):
+    def forward_for_export(self, batch_nb, audio_signal, length):
         max_audio_length: int = audio_signal.size(-1)
 
         if max_audio_length > self.max_audio_length:
@@ -281,12 +284,21 @@ class ConformerEncoder(NeuralModule, Exportable):
             pad_mask = ~pad_mask
         else:
             pad_mask = None
+            
+        print(audio_signal.shape)
+        raise
+            
+        if self.grad_mask is not None and batch_nb in self.masked_batch:
+            audio_signal = self.grad_mask(audio_signal)
 
         for lth, layer in enumerate(self.layers):
             audio_signal = layer(x=audio_signal, att_mask=att_mask, pos_emb=pos_emb, pad_mask=pad_mask)
 
         if self.out_proj is not None:
             audio_signal = self.out_proj(audio_signal)
+            
+        if self.grad_mask is not None and batch_nb in self.masked_batch:
+            audio_signal = self.skip_grad(audio_signal)
 
         audio_signal = torch.transpose(audio_signal, 1, 2)
         return audio_signal, length

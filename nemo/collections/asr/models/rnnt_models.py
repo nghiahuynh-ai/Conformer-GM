@@ -671,7 +671,11 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
         if (self.spec_augmentation is not None) and self.training and (self.batch_nb not in self.masked_batch):
             processed_signal = self.spec_augmentation(input_spec=processed_signal, length=processed_signal_length)
         
-        encoded, encoded_len = self.encoder(audio_signal=processed_signal, length=processed_signal_length)
+        encoded, encoded_len = self.encoder(
+            batch_nb=self.batch_nb, 
+            audio_signal=processed_signal, 
+            length=processed_signal_length
+        )
         return encoded, encoded_len
 
     # PTL-specific methods
