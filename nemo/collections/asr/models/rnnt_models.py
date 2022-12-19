@@ -668,7 +668,7 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
             )
         
         # Spec augment is not applied during evaluation/testing
-        if (self.spec_augmentation is not None) and self.training and (self.batch_nb not in self.masked_batch):
+        if (self.spec_augmentation is not None) and self.training and (batch_nb not in self.masked_batch):
             processed_signal = self.spec_augmentation(input_spec=processed_signal, length=processed_signal_length)
         
         encoded, encoded_len = self.encoder(
@@ -681,8 +681,6 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
     # PTL-specific methods
     def training_step(self, batch, batch_nb):
         signal, signal_len, transcript, transcript_len = batch
-        
-        self.batch_nb = batch_nb
 
         # forward() only performs encoder forward
         if isinstance(batch, DALIOutputs) and batch.has_processed_signal:
