@@ -361,12 +361,8 @@ class SkipGradient(nn.Module):
         self.mask = mask
     
     def forward(self, input_spec):
+        def hook(grad):
+            print(grad.shape)
+            raise
+        input_spec.register_hook(hook)
         return input_spec
-    
-    def my_hook(grad_output):
-        print(grad_output.shape)
-        raise
-        mask_output = self.mask.unsqueeze(1).expand(grad_output.shape)
-        grad_output = grad_output * mask_output.to(grad_output.device)
-        del mask_output
-        return grad_output
