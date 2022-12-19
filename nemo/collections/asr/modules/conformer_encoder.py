@@ -290,7 +290,7 @@ class ConformerEncoder(NeuralModule, Exportable):
             audio_signal, mask = self.grad_mask(audio_signal)
             audio_signal = self.skip_grad.forward(audio_signal)
             self.skip_grad.update_mask(mask)
-            
+            print(audio_signal.shape)
 
         for lth, layer in enumerate(self.layers):
             audio_signal = layer(x=audio_signal, att_mask=att_mask, pos_emb=pos_emb, pad_mask=pad_mask)
@@ -365,6 +365,8 @@ class SkipGradient(nn.Module):
         return input_spec
     
     def backward(self, grad_output):
+        print(grad_output.shape)
+        raise
         mask_output = self.mask.unsqueeze(1).expand(grad_output.shape)
         grad_output = grad_output * mask_output.to(grad_output.device)
         del mask_output
