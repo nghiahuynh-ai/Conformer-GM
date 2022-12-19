@@ -289,7 +289,7 @@ class ConformerEncoder(NeuralModule, Exportable):
         if self.grad_mask is not None and batch_nb in self.masked_batch:
             audio_signal, mask = self.grad_mask(audio_signal)
             self.skip_grad.update_mask(mask)
-            print(audio_signal.shape)
+            # print(audio_signal.shape)
 
         for lth, layer in enumerate(self.layers):
             audio_signal = layer(x=audio_signal, att_mask=att_mask, pos_emb=pos_emb, pad_mask=pad_mask)
@@ -362,7 +362,7 @@ class SkipGradient(nn.Module):
     
     def forward(self, input_spec):
         def hook(grad):
-            print(grad.shape)
+            # print(grad.shape)
             return self.mask.to(grad.device) * grad
         input_spec.register_hook(hook)
         return input_spec
