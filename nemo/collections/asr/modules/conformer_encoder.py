@@ -345,7 +345,7 @@ class GradientMask(nn.Module):
             for idx in masked_idx:
                 mask[batch_idx, idx : idx + offset] = self.mask_value
         mask = mask != self.mask_value
-        input_mask = mask.unsqueeze(1).expand(batch, freq, time)
+        input_mask = mask.unsqueeze(2).expand(batch, freq, time)
         input_spec = input_spec * input_mask.to(input_spec.device)
         del input_mask
         return input_spec, mask
@@ -363,6 +363,6 @@ class SkipGradient(nn.Module):
     def forward(self, input_spec):
         def hook(grad):
             print(grad.shape)
-            raise
+            return self.mask * grad
         input_spec.register_hook(hook)
         return input_spec
