@@ -338,16 +338,16 @@ class GradientMask(nn.Module):
     def forward(self, input_spec):
         batch, time, freq = input_spec.shape
         max_offset = max(1, int(time * self.mask_width))
-        mask = torch.ones(batch, time)
+        mask = torch.ones(input_spec.shape)
         for batch_idx in range(batch):
             offset = np.random.randint(1, max_offset)
             masked_idx = np.random.choice(range(time - offset), size=self.num_masks, replace=False)
             for idx in masked_idx:
-                mask[batch_idx, idx : idx + offset] = self.mask_value
+                mask[batch_idx, idx : idx + offset, :] = self.mask_value
         mask = mask != self.mask_value
-        input_mask = mask.unsqueeze(2).expand(batch, time, freq)
-        input_spec = input_spec * input_mask.to(input_spec.device)
-        del input_mask
+        # input_mask = mask.unsqueeze(2).expand(input_spec.shape)
+        input_spec = input_spec * mask.to(input_spec.device)
+        # del input_mask
         return input_spec, mask
     
     
