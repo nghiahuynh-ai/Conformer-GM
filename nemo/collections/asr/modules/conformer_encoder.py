@@ -345,7 +345,7 @@ class GradientMask(nn.Module):
             for idx in masked_idx:
                 mask[batch_idx, idx : idx + offset] = self.mask_value
         mask = mask != self.mask_value
-        input_mask = mask.unsqueeze(2).expand(batch, freq, time)
+        input_mask = mask.unsqueeze(2).expand(batch, time, freq)
         input_spec = input_spec * input_mask.to(input_spec.device)
         del input_mask
         return input_spec, mask
