@@ -288,7 +288,6 @@ class ConformerEncoder(NeuralModule, Exportable):
         #shape: (batch, time, freq)
         if self.grad_mask is not None and batch_nb in self.masked_batch:
             audio_signal, mask = self.grad_mask(audio_signal)
-            audio_signal = self.skip_grad.forward(audio_signal)
             self.skip_grad.update_mask(mask)
             print(audio_signal.shape)
 
@@ -299,7 +298,7 @@ class ConformerEncoder(NeuralModule, Exportable):
             audio_signal = self.out_proj(audio_signal)
             
         if self.grad_mask is not None and batch_nb in self.masked_batch:
-            audio_signal = self.skip_grad(audio_signal)
+            audio_signal = self.skip_grad.forward(audio_signal)
 
         audio_signal = torch.transpose(audio_signal, 1, 2)
         return audio_signal, length
