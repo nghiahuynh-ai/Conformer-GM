@@ -336,7 +336,7 @@ class GradientMask(nn.Module):
         
     @torch.no_grad()
     def forward(self, input_spec):
-        batch, freq, time = input_spec.shape
+        batch, time, freq = input_spec.shape
         max_offset = max(1, int(time * self.mask_width))
         mask = torch.ones(batch, time)
         for batch_idx in range(batch):
